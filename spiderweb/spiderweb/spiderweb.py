@@ -86,7 +86,7 @@ class IRC(object):
             if password:
                 self.raw('PASS ' + password)
             self.raw(f'USER {username} 0 * :{realname}')
-            self.raw('NICK ' + nick)
+            self.raw('NICK ' + nickname)
         except socket.error as ex:
             error('Failed to connect to IRC server.', ex)
             self.event_disconnect()
@@ -119,7 +119,7 @@ class IRC(object):
 
     def event_part(self, nick, host, chan):
         self.raw(f'SAJOIN {nick} {chan}')
-        self.sendmsg(chan, color(f'HA HA HA! IM A BIG ASSHOLE SPIDER AND {nick} IS CAUGHT IN MY SPIDER WEB!!!', red))
+        self.sendmsg(chan, self.color(f'HA HA HA! IM A BIG ASSHOLE SPIDER AND {nick} IS CAUGHT IN MY SPIDER WEB!!!', red))
 
     def handle_events(self, data):
         args = data.split()
