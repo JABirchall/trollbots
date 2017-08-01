@@ -96,7 +96,7 @@ class clone:
 							self.topic(config.connection.channel, '{0} {1} {2}'.format(random_str(random_int(5,10)), config.attacks.message, random_str(random_int(5, 10))))
 					else:
 						if self.nicklist:
-							message = self.rainbow('{0}: {1}'.format(random.choice(self.nicklist), config.attacks.message))
+							message = self.rainbow('{0} {1} {2}'.format(' '.join(random.sample(self.nicklist, 3)), config.attacks.message, ' '.join(random.sample(self.nicklist, 3))))
 						else:
 							message = self.rainbow(config.attacks.message)
 						if option == 'action':
