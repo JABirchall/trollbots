@@ -1,37 +1,38 @@
 #!/usr/bin/env python
-# BadParent IRC Nicklist Flooder
+# BadParent
 # Developed by acidvegas in Python 3
 # https://github.com/acidvegas/trollbots
 # config.py
 
-# Connection
-server    = 'irc.server.com'
-port      = 6667
-use_ipv6  = False
-use_ssl   = False
-proxy     = None # Proxy should be a Socks5 in IP:PORT format.
-vhost     = None
-password  = None
-channel   = '#chat'
-key       = None
-message   = 'I have bad parents and was raised to flood on IRC.'
+class connection:
+	server  = 'irc.server.com'
+	port    = 6667
+	proxy   = None
+	ipv6    = False
+	ssl     = False
+	vhost   = None
+	channel = '#chat'
+	key     = None
 
-# Identity
-nickname = 'BadParent'
-username = 'badparent'
-realname = 'BadParent IRC Bot'
+class cert:
+	key      = None
+	file     = None
+	password = None
 
-# Attack Types
-dcc     = True
-ctcp    = True
-invite  = True
-private = True
+class ident:
+	nickname = 'BadParent'
+	username = 'badparent'
+	realname = 'BadParent IRC Bot'
 
-# Throttle
-attack_delay           = 1.5 # Delay between each attack method sent.
-concurrent_connections = 3   # Number of concurrent connections per-proxy.
-max_threads            = 100 # Maximum number of threads running at one time.
-timeout                = 15  # Seconds before timing out on a connection.
+class login:
+	network  = None
+	nickserv = None
 
-# DO NOT EDIT
-nicklist = list()
+class throttle
+	concurrency = 3
+	pm          = 1.5
+	threads     = 100
+	timeout     = 15
+
+class settings:
+	msg = 'I was raised by bad parents so I flood on IRC...'
