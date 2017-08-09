@@ -75,8 +75,8 @@ class clone:
 		self.sock             = None
 
 	def attack(self):
-		random.shuffle(self.option['channels'])
-		for channel in self.option['channels']:
+		random.shuffle(self.options['channels'])
+		for channel in self.options['channels']:
 			try:
 				if ':' in channel:
 					chan, key = channel.split(':')
@@ -132,8 +132,8 @@ class clone:
 		self.sock.close()
 
 	def event_end_of_list(self):
-		if self.option['channels']:
-			debug(f'Loaded {0} channels from {1} server.'.format(len(self.option['channels']), self.server))
+		if self.options['channels']:
+			debug('Loaded {0} channels from {1} server.'.format(len(self.options['channels']), self.server))
 			threading.Thread(target=self.attack).start()
 		else:
 			error(f'Found zero channels on {self.server} server.')
@@ -171,7 +171,7 @@ class clone:
 			self.part(chan, config.settings.part_msg)
 
 	def event_list_channel(self, chan, users):
-		self.option['channels'].append(chan)
+		self.options['channels'].append(chan)
 
 	def event_nick_in_use(self):
 		self.nickname = self.nickname + '_'
@@ -232,7 +232,7 @@ class clone:
 		elif args[1] == 'PART':
 			nick = args[0].split('!')[0][1:]
 			chan = args[2]
-			if nick == self.nickname and chan == self.option['channels'][len(self.option['channels'])-1]:
+			if nick == self.nickname and chan == self.options['channels'][len(self.options['channels'])-1]:
 				self.event_disconnect()
 
 	def join_channel(self, chan):
