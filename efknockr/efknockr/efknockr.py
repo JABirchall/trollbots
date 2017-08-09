@@ -71,18 +71,19 @@ class clone:
 		self.bad_channels	  = list()
 		self.current_channels = list()
 		self.nicklist         = dict()
+		self.nickname         = config.ident.nickname
 		self.sock             = None
 
 	def attack(self):
-		random.shuffle(self.channels)
-		for channel in self.channels:
+		random.shuffle(self.option['channels'])
+		for channel in self.option['channels']:
 			try:
 				if ':' in channel:
 					chan, key = channel.split(':')
 					self.join_channel(chan, key)
 				else:
 					self.join_channel(channel)
-				time.sleep(self.join_throttle)
+				time.sleep(config.throttle.join)
 				while len(self.current_channels) >= config.throttle.channels:
 					time.sleep(1)
 			except Exception as ex:
@@ -131,8 +132,8 @@ class clone:
 		self.sock.close()
 
 	def event_end_of_list(self):
-		if self.channels:
-			debug(f'Loaded {len(self.channels)} channels from {self.server} server.')
+		if self.option['channels']:
+			debug(f'Loaded {0} channels from {1} server.'.format(len(self.option['channels']), self.server))
 			threading.Thread(target=self.attack).start()
 		else:
 			error(f'Found zero channels on {self.server} server.')
@@ -142,11 +143,11 @@ class clone:
 		self.current_channels.append(chan)
 		debug(f'Knocking {chan} channel on {self.server}...')
 		try:
-			for line in self.messages:
+			for line in msg_lines:
 				if chan in self.bad_channels:
 					break
 				self.sendmsg(chan, line)
-				time.sleep(self.message_throttle)
+				time.sleep(config.throttle.message)
 			if chan in self.nicklist and chan not in self.bad_channels:
 				self.nicklist[chan] = ' '.join(self.nicklist[chan])
 				if len(self.nicklist[chan]) <= 400:
@@ -157,7 +158,7 @@ class clone:
 						segment = segment[:-len(segment.split()[len(segment.split())-1])]
 						self.sendmsg(chan, segment)
 						self.nicklist[chan] = self.nicklist[chan][len(segment):]
-						time.sleep(self.message_throttle)
+						time.sleep(config.throttle.message)
 		except Exception as ex:
 			error('Error occured in the attack loop!', ex)
 		finally:
@@ -167,17 +168,17 @@ class clone:
 				self.bad_channels.remove(chan)
 			if chan in self.nicklist:
 				del self.nicklist[chan]
-			self.part(chan, self.part_message)
+			self.part(chan, config.settings.part_msg)
 
 	def event_list_channel(self, chan, users):
-		self.channels.append(chan)
+		self.option['channels'].append(chan)
 
 	def event_nick_in_use(self):
 		self.nickname = self.nickname + '_'
 		self.nick(self.nickname)
 
 	def event_names(self, chan, names):
-		if self.mass_hilite:
+		if config.settings.mass_hilite:
 			if not chan in self.nicklist:
 				self.nicklist[chan] = list()
 			for name in names:
@@ -231,7 +232,7 @@ class clone:
 		elif args[1] == 'PART':
 			nick = args[0].split('!')[0][1:]
 			chan = args[2]
-			if nick == self.nickname and chan == self.channels[len(self.channels)-1]:
+			if nick == self.nickname and chan == self.option['channels'][len(self.option['channels'])-1]:
 				self.event_disconnect()
 
 	def join_channel(self, chan):
@@ -242,7 +243,7 @@ class clone:
 			try:
 				data = self.sock.recv(1024).decode('utf-8')
 				for line in (line for line in data.split('\r\n') if line):
-					if len(line.split()) >= 2):
+					if len(line.split()) >= 2:
 						self.handle_events(line)
 			except (UnicodeDecodeError,UnicodeEncodeError):
 				pass
@@ -261,10 +262,10 @@ class clone:
 		self.sock.send(bytes(msg + '\r\n', 'utf-8'))
 
 	def register(self):
-		if config.login.network:
-			self.raw('PASS ' + config.login.network)
+		if self.options['password']:
+			self.raw('PASS ' + self.options['password'])
 		self.raw('USER {0} 0 * :{1}'.format(config.ident.username, config.ident.realname))
-		self.raw('NICK ' + config.ident.username)
+		self.raw('NICK ' + config.ident.nickname)
 
 	def sendmsg(self, target, msg):
 		self.raw(f'PRIVMSG {target} :{msg}')
