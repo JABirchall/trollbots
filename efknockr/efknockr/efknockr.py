@@ -58,7 +58,7 @@ class clone:
 		self.bad_channels     = list()
 		self.current_channels = list()
 		self.nicklist         = dict()
-		self.nickname         = options['nickname']
+		self.nickname         = None
 		self.sock             = None
 
 	def run(self):
@@ -66,6 +66,7 @@ class clone:
 			self.options = config.defaults
 		else:
 			self.options.update(config.defaults)
+		self.nickname = self.options['nickname']
 		self.connect()
 
 	def attack(self):
