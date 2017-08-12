@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # SpiderWeb
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # spiderweb.py
 
 import socket
-#import socks
 import ssl
 import threading
 import time
@@ -13,7 +12,7 @@ import time
 # Connection
 server     = 'irc.server.com'
 port       = 6667
-proxy      = None
+proxy      = None # Proxy should be a Socks 5 in IP:PORT format.
 use_ipv6   = False
 use_ssl    = False
 ssl_verify = False
@@ -46,12 +45,22 @@ def debug(msg):
 def error(msg, reason=None):
 	print(f'{get_time()} | [!] - {msg} ({reason})')
 
+def error_exit(msg):
+	raise SystemExit(f'{get_time()} | [!] - {msg}')
+
 def get_time():
 	return time.strftime('%I:%M:%S')
 
 class IRC(object):
 	def __init__(self):
 		self.sock = None
+
+	def attack(self, nick):
+		time.sleep(1)
+		try:
+			self.sendmsg(channel, 'HA HA HA! IM A BIG ASSHOLE SPIDER AND {nick} IS CAUGHT IN MY SPIDER WEB!!!')
+		except:
+			pass
 
 	def connect(self):
 		try:
@@ -77,7 +86,16 @@ class IRC(object):
 		if vhost:
 			self.sock.bind((vhost, 0))
 		if use_ssl:
-			self.sock = ssl.wrap_socket(self.sock, keyfile=cert_key, certfile=cert_file)
+			ctx = ssl.create_default_context()
+			if cert_file:
+				ctx.load_cert_chain(cert_file, cert_key, password)
+			if ssl_verify:
+				ctx.verify_mode = ssl.CERT_REQUIRED
+				ctx.load_default_certs()
+			else:
+				ctx.check_hostname = False
+				ctx.verify_mode = ssl.CERT_NONE
+			self.sock = ctx.wrap_socket(self.sock)
 
 	def event_connect(self):
 		if user_modes:
@@ -99,8 +117,11 @@ class IRC(object):
 
 	def event_part(self, nick, host, chan):
 		if chan == channel and host != admin_host:
-			self.raw(f'SAJOIN {nick} {chan}')
-			self.sendmsg(chan, 'HA HA HA! IM A BIG ASSHOLE SPIDER AND {nick} IS CAUGHT IN MY SPIDER WEB!!!')
+			if use_anope_svsjoin:
+				self.svsjoin(nick, chan)
+			else:
+				self.sajoin(nick, chan)
+			threading.Thread(target=self.attack,args=(nick,)).start()
 
 	def handle_events(self, data):
 		args = data.split()
@@ -114,6 +135,10 @@ class IRC(object):
 			self.event_oper()
 		elif args[1] == '433':
 			self.event_nick_in_use()
+		elif args[1] == '481':
+			error_exit('You do not have the correct IRC operator privileges to use SAJOIN.')
+		elif args[1] == '491':
+			error_exit('No O-lines for your host.')
 		elif args[1] == 'PART':
 			nick = args[0].split('!')[0][1:]
 			host = args[0].split('!')[1].split('@')[1]
@@ -121,7 +146,6 @@ class IRC(object):
 			self.event_part(nick, host, chan)
 
 	def identify(self, nickname, password):
-		self.sendmsg('nickserv', f'recover {nickname} {password}')
 		self.sendmsg('nickserv', f'identify {nickname} {password}')
 
 	def join(self, chan, key=None):
@@ -155,9 +179,22 @@ class IRC(object):
 		if network_password:
 			self.raw('PASS ' + network_password)
 		self.raw(f'USER {username} 0 * :{realname}')
-		self.nick(nickname)
+		self.raw('NICK ' + nickname)
+
+	def sajoin(self, nick, chan):
+		self.raw(f'SAJOIN {nick} {chan}')
+
+	def svsjoin(self, nick, chan):
+		self.sendmsg('OperServ', f'SVSJOIN {nick} {chan}')
+
 
 	def sendmsg(self, target, msg):
 		self.raw(f'PRIVMSG {target} :{msg}')
 
+# Main
+if proxy:
+	try:
+		import socks
+	except ImportError:
+		error_exit('Missing PySocks module! (https://pypi.python.org/pypi/PySocks)'
 IRC().connect()
