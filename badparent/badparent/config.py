@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # BadParent
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # config.py
 
 class connection:
 	server  = 'irc.server.com'
 	port    = 6667
-	proxy   = None
+	proxy   = None # Proxy should be a Socks 5 in IP:PORT format.
 	ipv6    = False
 	ssl     = False
 	vhost   = None

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # BadParent
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # badparent.py
 
@@ -172,8 +172,9 @@ class parent(object):
 		while True:
 			try:
 				data = self.sock.recv(1024).decode('utf-8')
-				for line in (line for line in data.split('\r\n') if len(line.split()) >= 2):
-					self.handle_events(line)
+				for line in (line for line in data.split('\r\n') if line):
+					if len(line.split()) >= 2:
+						self.handle_events(line)
 			except (UnicodeDecodeError,UnicodeEncodeError):
 				pass
 			except Exception as ex:
@@ -314,8 +315,6 @@ print('#{0}#'.format('Developed by acidvegas in Python 3'.center(54)))
 print('#{0}#'.format('https://github.com/acidvegas/trollbots'.center(54)))
 print('#{0}#'.format(''.center(54)))
 print(''.rjust(56, '#'))
-if not sys.version_info.major == 3:
-	error_exit('BadParent requires Python version 3 to run!')
 parser = argparse.ArgumentParser(usage='%(prog)s <input> [options]')
 parser.add_argument('input',         help='file to scan')
 parser.add_argument('-p', '--proxy', help='proxy list', action='store_true')
