@@ -36,8 +36,9 @@ network_password  = None
 operator_password = None
 
 # Other
-admin_host = 'admin.host'
-user_modes = None
+admin_host        = 'admin.host'
+use_anope_svsjoin = False # Enable this to use the OperServ command SVSJOIN with Anope instead of SAJOIN.
+user_modes        = None
 
 def debug(msg):
 	print(f'{get_time()} | [~] - {msg}')
@@ -58,7 +59,7 @@ class IRC(object):
 	def attack(self, nick):
 		time.sleep(1)
 		try:
-			self.sendmsg(channel, 'HA HA HA! IM A BIG ASSHOLE SPIDER AND {nick} IS CAUGHT IN MY SPIDER WEB!!!')
+			self.sendmsg(channel, f'HA HA HA! IM A BIG ASSHOLE SPIDER AND {nick} IS CAUGHT IN MY SPIDER WEB!!!')
 		except:
 			pass
 
@@ -125,7 +126,7 @@ class IRC(object):
 
 	def handle_events(self, data):
 		args = data.split()
-		if line.startswith('ERROR :Closing Link:'):
+		if data.startswith('ERROR :Closing Link:'):
 			raise Exception('Connection has closed.')
 		elif args[0] == 'PING':
 			self.raw('PONG ' + args[1][1:])
@@ -169,6 +170,9 @@ class IRC(object):
 				break
 		self.event_disconnect()
 
+	def mode(self, target, mode):
+		self.raw(f'MODE {target} {mode}')
+
 	def oper(self, username, password):
 		self.raw(f'OPER {username} {password}')
 
@@ -187,7 +191,6 @@ class IRC(object):
 	def svsjoin(self, nick, chan):
 		self.sendmsg('OperServ', f'SVSJOIN {nick} {chan}')
 
-
 	def sendmsg(self, target, msg):
 		self.raw(f'PRIVMSG {target} :{msg}')
 
@@ -196,5 +199,5 @@ if proxy:
 	try:
 		import socks
 	except ImportError:
-		error_exit('Missing PySocks module! (https://pypi.python.org/pypi/PySocks)'
+		error_exit('Missing PySocks module! (https://pypi.python.org/pypi/PySocks)')
 IRC().connect()
