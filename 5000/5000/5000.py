@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # 5000
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # 5000.py
 
+import os
 import random
 import socket
-#import socks
 import ssl
 import string
 import threading
@@ -15,7 +15,7 @@ import time
 # Connection
 server     = 'irc.server.com'
 port       = 6667
-proxy      = None
+proxy      = None # Proxy should be a Socks 5 in IP:PORT format.
 use_ipv6   = False
 use_ssl    = False
 ssl_verify = False
@@ -39,16 +39,31 @@ network_password  = None
 operator_password = None
 
 # Settings
-admin_host      = 'admin.host'
-max_nicks       = 3
-sajoin_throttle = 0.03
-user_modes      = None
+admin_host        = 'admin.host'
+max_nicks         = 3
+sajoin_throttle   = 0.04
+use_anope_svsjoin = False # Enable this to use the OperServ command SVSJOIN with Anope instead of SAJOIN.
+user_modes        = None
+
+# Globals (DO NOT EDIT)
+kill_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'kills.log')
 
 def debug(msg):
 	print(f'{get_time()} | [~] - {msg}')
 
 def error(msg, reason):
 	print(f'{get_time()} | [!] - {msg} ({reason})')
+
+def error_exit(msg):
+	raise SystemExit(f'{get_time()} | [!] - {msg}')
+
+def kills(action):
+	if action == 'add':
+		open(kill_file, 'w').write(str(int(open(kill_file).read())+1))
+	elif action == 'get':
+		return int(open(kill_file).read())
+	elif action == 'reset'
+		return open(kill_file, 'w').write('0')
 
 def get_time():
 	return time.strftime('%I:%M:%S')
@@ -62,7 +77,6 @@ def random_str(size):
 class IRC(object):
 	def __init__(self):
 		self.nicklist = list()
-		self.kills    = 0
 		self.last     = 0
 		self.sock     = None
 
@@ -70,11 +84,16 @@ class IRC(object):
 		try:
 			self.nicklist.append(nick)
 			self.sendmsg(channel, f'I am fucking the shit out of {nick} right now...')
-			self.kills += 1
-			for i in range(5000):
-				if nick not in self.nicklist:
-					break
-				self.raw(f'SAJOIN {nick} #{random_str(random_int(5,10))}')
+			kills('add')
+			if use_anope_svsjoin:
+				for i in range(5000):
+					if nick not in self.nicklist:
+						break
+					self.svsjoin(nick, '#' + random_str(random_int(5,10)))
+			else:
+				for i in range(200):
+					channels = ','.join(['#' + random_str(random_int(5,10)) for x in range(25)])
+					self.sajoin(nick, channels)
 				time.sleep(sajoin_throttle)
 			self.kick('#5000', nick)
 		except Exception as ex:
@@ -132,18 +151,21 @@ class IRC(object):
 
 	def event_join(self, nick, host, chan):
 		if chan == '#5000' and host != admin_host:
-			if len(self.nicklist) <= max_nicks and nick not in self.nicklist:
+			if len(self.nicklist) < max_nicks and nick not in self.nicklist:
 				threading.Thread(target=self.attack,args=(nick,)).start()
 
-	def event_message(self, nick, chan, msg):
+	def event_message(self, nick, host, chan, msg):
 		if chan == channel:
 			if msg == '.kills':
 				if time.time() - self.last > 3:
-					self.sendmsg(chan, str(self.kills))
+					self.sendmsg(chan, kills('get'))
 				self.last = time.time()
+			elif msg == '.kills reset' and host == admin_host:
+				kills('reset')
+				self.sendmsg(chan, '0')
 
 	def event_nick_in_use(self):
-		raise SystemExit(f'{get_time()} | [!] - 5000 is already running!')
+		error_exit('5000 is already running!')
 
 	def event_no_such_nick(self, nick):
 		if nick in self.nicklist:
@@ -168,6 +190,10 @@ class IRC(object):
 			self.event_no_such_nick(nick)
 		elif args[1] == '433':
 			self.event_nick_in_use()
+		elif args[1] == '481':
+			error_exit('You do not have the correct IRC operator privileges to use SAJOIN.')
+		elif args[1] == '491':
+			error_exit('No O-lines for your host.')
 		elif args[1] == 'JOIN':
 			nick = args[0].split('!')[0][1:]
 			host = args[0].split('!')[1].split('@')[1]
@@ -176,12 +202,12 @@ class IRC(object):
 				self.event_join(nick, host, chan)
 		elif args[1] == 'PRIVMSG':
 			nick = args[0].split('!')[0][1:]
+			host = args[0].split('!')[1].split('@')[1]
 			chan = args[2]
 			msg  = data.split(f'{args[0]} PRIVMSG {chan} :')[1]
-			self.event_message(nick, chan, msg)
+			self.event_message(nick, host, chan, msg)
 
 	def identify(self, nick, password):
-		self.sendmsg('nickserv', f'recover {nick} {password}')
 		self.sendmsg('nickserv', f'identify {nick} {password}')
 
 	def join(self, chan, key=None):
@@ -223,7 +249,21 @@ class IRC(object):
 		self.raw(f'USER {username} 0 * :{realname}')
 		self.nick(nickname)
 
+	def sajoin(self, nick, chan):
+		self.raw(f'SAJOIN {nick} {chan}')
+
+	def svsjoin(self, nick, chan):
+		self.sendmsg('OperServ', f'SVSJOIN {nick} {chan}')
+
 	def sendmsg(self, target, msg):
 		self.raw(f'PRIVMSG {target} :{msg}')
 
+# Main
+if proxy:
+	try:
+		import socks
+	except ImportError:
+		error_exit('Missing PySocks module! (https://pypi.python.org/pypi/PySocks)')
+if not os.path.isfile(kill_file):
+	open(kill_file, 'w').write('0')
 IRC().connect()
