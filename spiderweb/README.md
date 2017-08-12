@@ -8,6 +8,6 @@ SAJOIN Trap Channel IRC Bot
 ##### Information
 This bot requires network operator privledges in order to use the `SAJOIN` command.
 
-If `use_anope_svsjoin` is enabled, the bot will require services operator privledges with Anope in order to use the `SVSJOIN` that OperServ provides instead of `SAJOIN`.
+If `use_anope_svsjoin` is enabled, the bot will require services operator privledges with Anope in order to use the `SVSJOIN` that OperServ provides, instead of `SAJOIN`.
 
 The bot will idle in the channel defined in the config. Anyone who tries to part from the channel will be force joined back into it.
