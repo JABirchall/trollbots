@@ -3,6 +3,7 @@ ASCII flooder for IRC channels.
 
 ##### Requirements
 * [Python](https://www.python.org/downloads/)
+
 **Note:** *This script was developed to be used with the latest version of Python.*
 
 * [PySocks](https://pypi.python.org/pypi/PySocks) *(Optional, for `proxy` setting.)*
