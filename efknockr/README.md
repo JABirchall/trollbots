@@ -7,5 +7,3 @@ A mass flood script for IRC to attack a large number of networks and channels.
 
 ##### Information
 For each server defined in `targets`, the bot will connnect, join all channels from a /LIST output, or specifically defined channels in the config, send each line from `msg.txt`, mass hilight everyone, and then part.
-
-Make sure you edit the `config.py` file to change some of the efknockr settings.
