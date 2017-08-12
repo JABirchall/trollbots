@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # EFknockr (EFK)
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # efknockr.py
 
@@ -272,15 +272,13 @@ class clone:
 		self.raw(f'PRIVMSG {target} :{msg}')
 
 # Main
-print(''.rjust(56, '#'))
+print('#'*56)
 print('#{0}#'.format(''.center(54)))
 print('#{0}#'.format('EFknockr (EFK)'.center(54)))
-print('#{0}#'.format('Developed by acidvegas in Python 3'.center(54)))
+print('#{0}#'.format('Developed by acidvegas in Python'.center(54)))
 print('#{0}#'.format('https://github.com/acidvegas/trollbots'.center(54)))
 print('#{0}#'.format(''.center(54)))
-print(''.rjust(56, '#'))
-if not sys.version_info.major == 3:
-	error_exit('EFknockr requires Python 3 to run!')
+print('#'*56)
 if config.connection.proxy:
 	try:
 		import socks
