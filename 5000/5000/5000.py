@@ -62,7 +62,7 @@ def kills(action):
 		open(kill_file, 'w').write(str(int(open(kill_file).read())+1))
 	elif action == 'get':
 		return int(open(kill_file).read())
-	elif action == 'reset'
+	elif action == 'reset':
 		return open(kill_file, 'w').write('0')
 
 def get_time():
@@ -124,7 +124,7 @@ class IRC(object):
 		else:
 			self.sock = socket.socket(family, socket.SOCK_STREAM)
 		self.sock = socket.socket(family, socket.SOCK_STREAM)
- 		if vhost:
+		if vhost:
 			self.sock.bind((vhost, 0))
 		if use_ssl:
 			ctx = ssl.create_default_context()
@@ -132,8 +132,10 @@ class IRC(object):
 				ctx.load_cert_chain(cert_file, cert_key, password)
 			if ssl_verify:
 				ctx.verify_mode = ssl.CERT_REQUIRED
-				ctx.check_hostname = True
 				ctx.load_default_certs()
+			else:
+				ctx.check_hostname = False
+				ctx.verify_mode = ssl.CERT_NONE
 			self.sock = ctx.wrap_socket(self.sock)
 
 	def event_connect(self):
@@ -247,7 +249,7 @@ class IRC(object):
 		if network_password:
 			self.raw('PASS ' + network_password)
 		self.raw(f'USER {username} 0 * :{realname}')
-		self.nick(nickname)
+		self.raw('NICK ' + nickname)
 
 	def sajoin(self, nick, chan):
 		self.raw(f'SAJOIN {nick} {chan}')
