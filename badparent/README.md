@@ -3,7 +3,7 @@ A script to PM flood nicks in a channel on IRC.
 
 ##### Requirements
 * [Python](https://www.python.org/downloads/) *(**Note:** This script was developed to be used with the latest version of Python.)*
-* [PySocks](https://pypi.python.org/pypi/PySocks) *(**Optional:** For using the `proxy` setting.)*
+* [PySocks](https://pypi.python.org/pypi/PySocks) *(**Optional:** For using the `--proxy` setting.)*
 
 ##### Information
 The parent bot will join a channel, parse the entire nicklist, and maintain it during joins, quits, nick changes, etc.

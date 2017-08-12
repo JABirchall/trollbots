@@ -308,13 +308,13 @@ def load_children():
 	debug('Flooding is complete. (Threads still may be running!)')
 
 # Main
-print(''.rjust(56, '#'))
+print('#'*56)
 print('#{0}#'.format(''.center(54)))
 print('#{0}#'.format('BadParent'.center(54)))
-print('#{0}#'.format('Developed by acidvegas in Python 3'.center(54)))
+print('#{0}#'.format('Developed by acidvegas in Python'.center(54)))
 print('#{0}#'.format('https://github.com/acidvegas/trollbots'.center(54)))
 print('#{0}#'.format(''.center(54)))
-print(''.rjust(56, '#'))
+print('#'*56)
 parser = argparse.ArgumentParser(usage='%(prog)s <input> [options]')
 parser.add_argument('input',         help='file to scan')
 parser.add_argument('-p', '--proxy', help='proxy list', action='store_true')

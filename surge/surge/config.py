@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Surge
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # config.py
 
@@ -19,8 +19,8 @@ class attacks:
 	nicklist = ['ctcp','invite','notice','private']
 
 class throttle:
-	attack      = 3   # Delay between each attack method sent.
-	concurrency = 3   # Number of concurrent connections per-proxy.
-	threads     = 100 # Maximum number of threads running at one time.
-	rejoin      = 3   # Delay to rejoin a channel after kick.
-	timeout     = 15  # Seconds before timing out on a connection.
+	attack      = 3
+	concurrency = 3
+	threads     = 100
+	rejoin      = 3
+	timeout     = 15

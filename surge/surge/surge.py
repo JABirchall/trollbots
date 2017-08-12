@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Surge
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # surge.py
 
@@ -319,15 +319,13 @@ class clone:
 		self.raw(f'TOPIC {chan} :{text}')
 
 # Main
-print(''.rjust(56, '#'))
+print('#'*56)
 print('#{0}#'.format(''.center(54)))
 print('#{0}#'.format('Surge'.center(54)))
-print('#{0}#'.format('Developed by acidvegas in Python 3'.center(54)))
+print('#{0}#'.format('Developed by acidvegas in Python'.center(54)))
 print('#{0}#'.format('https://github.com/acidvegas/trollbots'.center(54)))
 print('#{0}#'.format(''.center(54)))
-print(''.rjust(56, '#'))
-if not sys.version_info.major == 3:
-	error_exit('Surge requires Python version 3 to run!')
+print('#'*56)
 parser = argparse.ArgumentParser(usage='%(prog)s <input> [options]')
 parser.add_argument('input',         help='file to scan')
 parser.add_argument('-p', '--proxy', help='proxy list', action='store_true')
@@ -350,5 +348,4 @@ for i in range(config.throttle.concurrency):
 		checks = {executor.submit(clone(line).connect): line for line in data_lines}
 		for future in concurrent.futures.as_completed(checks):
 			checks[future]
-debug('Flooding is complete. (Threads still may be running!)')
-keep_alive()
+debug('Flooding is complete.')
