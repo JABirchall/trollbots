@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # EFknockr (EFK)
-# Developed by acidvegas in Python 3
+# Developed by acidvegas in Python
 # https://github.com/acidvegas/trollbots
 # config.py
 
 class connection:
-	proxy = None
+	proxy = None # Proxy should be a Socks5 in IP:PORT format.
 	vhost = None
 
 class settings:
-	mass_hilite = True
+	mass_hilite = True # Hilite all the users in a channel before parting.
 	part_msg    = 'Smell ya l8r'
 
 class throttle:
