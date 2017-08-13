@@ -59,7 +59,9 @@ def error_exit(msg):
 
 def kills(action):
 	if action == 'add':
-		open(kill_file, 'w').write(str(int(open(kill_file).read())+1))
+		current = str(int(open(kill_file).read())+1)
+		with open(kill_file, 'w') as kills_file:
+			kills_file.write(current)
 	elif action == 'get':
 		return int(open(kill_file).read())
 	elif action == 'reset':
