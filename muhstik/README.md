@@ -1,5 +1,5 @@
 # muhstik
-Massive Unwanted Homosexual Shitstorm Targeting IRC K *(enterprise edition)*
+Massive Unwanted Homosexual Shitstorm Targeting IRC K - Version 4.2.3 *(enterprise edition)*
 
 ###### Usage
 `./muhstik muhstik.conf`
@@ -36,3 +36,4 @@ In fact, testing of an early version of one of muhstik's parent scripts is the r
 * thyme:             for blogging with Rufas about AYSYN, ASIAN, and STUPID.
 * vx:                for his multiple blog sessions with Jmax and madvirii.
 * w00t *(aka X)*:      for his collection of nicks.
+* chrono             for leaking this private muhstik loldongs.
